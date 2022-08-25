@@ -9,7 +9,7 @@ Camera::Camera() {
   this->a_Pitch         = 0.0f;
   this->a_FOV           = 45.0f;
 
-  this->a_Speed		= 1.0f;
+  this->a_Speed		= 10.0f;
 }
 
 Camera::~Camera() {
@@ -41,17 +41,17 @@ void Camera::SetSpeed(float value) {
 }
 
 void Camera::MoveUp(float dt) {
-  this->a_Position += this->a_UpVector * this->a_Speed * dt;
+  this->a_Position += this->a_UpVector * parametric_blend(this->a_Speed) * dt;
 }
 
 void Camera::MoveDown(float dt) {
-  this->a_Position -= this->a_UpVector * this->a_Speed * dt;
+  this->a_Position -= this->a_UpVector * parametric_blend(this->a_Speed) * dt;
 }
 
 void Camera::MoveLeft(float dt) {
-  this->a_Position -= glm::normalize(glm::cross(this->a_Front, this->a_UpVector)) * this->a_Speed * dt;
+  this->a_Position -= glm::normalize(glm::cross(this->a_Front, this->a_UpVector)) * parametric_blend(this->a_Speed) * dt;
 }
 
 void Camera::MoveRight(float dt) {
-  this->a_Position += glm::normalize(glm::cross(this->a_Front, this->a_UpVector)) * this->a_Speed * dt;
+  this->a_Position += glm::normalize(glm::cross(this->a_Front, this->a_UpVector)) * parametric_blend(this->a_Speed) * dt;
 }

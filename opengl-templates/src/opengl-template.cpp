@@ -106,8 +106,12 @@ void OpenGL::CursorCallback(GLFWwindow *window, double xPosIn, double yPosIn) {
   (void) window;
   (void) xPosIn;
   (void) yPosIn;
-  float xpos = (float) xPosIn;
-  float ypos = (float) yPosIn;
+
+  double xpos = xPosIn;
+  double ypos = yPosIn;
+
+  int width;
+  int height;
 
   if (OpenGL::m_Mouse->IsFirstMouse()) {
     OpenGL::m_Mouse->SetLastXPos(xpos);
@@ -115,21 +119,15 @@ void OpenGL::CursorCallback(GLFWwindow *window, double xPosIn, double yPosIn) {
     OpenGL::m_Mouse->SetFirstMouse(false);
   }
 
-  float xoffset = xpos - OpenGL::m_Mouse->GetLastXPos();
-  float yoffset = OpenGL::m_Mouse->GetLastYPos() - ypos;
+  glfwGetCursorPos(window, &xpos, &ypos);
+  glfwGetWindowSize(window, &width, &height);
 
-  OpenGL::m_Mouse->SetLastXPos(xpos);
-  OpenGL::m_Mouse->SetLastYPos(ypos);
+  float threashold = 10.0f;
 
-  xoffset *= OpenGL::m_Mouse->GetSensitivity();
-  yoffset *= OpenGL::m_Mouse->GetSensitivity();
-
-  float threshold = 0.0f;
-
-  if (xoffset < -threshold) OpenGL::GetCamera()->MoveLeft(OpenGL::deltaTime);
-  if (xoffset >  threshold) OpenGL::GetCamera()->MoveRight(OpenGL::deltaTime);
-  if (yoffset < -threshold) OpenGL::GetCamera()->MoveDown(OpenGL::deltaTime);
-  if (yoffset >  threshold) OpenGL::GetCamera()->MoveUp(OpenGL::deltaTime);
+  if (xpos < 0 + threashold) OpenGL::GetCamera()->MoveLeft(OpenGL::deltaTime);
+  if (xpos > width - threashold) OpenGL::GetCamera()->MoveRight(OpenGL::deltaTime);
+  if (ypos < 0 + threashold) OpenGL::GetCamera()->MoveUp(OpenGL::deltaTime);
+  if (ypos > height - threashold) OpenGL::GetCamera()->MoveDown(OpenGL::deltaTime);
 }
 
 void OpenGL::ScrollCallback(GLFWwindow *window, double xoffset, double yoffset) {
@@ -137,10 +135,13 @@ void OpenGL::ScrollCallback(GLFWwindow *window, double xoffset, double yoffset) 
   (void) xoffset;
   (void) yoffset;
 
-  OpenGL::m_Camera->a_FOV -= OpenGL::sigmoid(yoffset) * 5.0f;
-  if (OpenGL::m_Camera->a_FOV < 1.0f) OpenGL::m_Camera->a_FOV = 1.0f;
-}
+  // TODO:
+  // 1. Get the world-space coordinates of the mouse cursor using the current zoom factor and model/proj/view matrices.
+  // 2. Adjust zoom factor
+  // 3. Get the world-space mouse coordinates again using the new zoom factor
+  // 4. Shift the camera position by the difference in world-space mouse coordinates
+  // 5. Redraw scene using new camera position and zoom factor
 
-float OpenGL::sigmoid(float x) {
-  return 2.0f / (1.0f + std::exp(-x)) - 1.0f;
+  OpenGL::m_Camera->a_FOV -= (2.0f * parametric_blend(yoffset) - 1) * 5.0f;
+  if (OpenGL::m_Camera->a_FOV < 1.0f) OpenGL::m_Camera->a_FOV = 1.0f;
 }

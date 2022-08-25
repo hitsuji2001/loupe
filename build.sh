@@ -3,7 +3,7 @@
 CXX="${CXX:-g++}"
 SRC_APP="src/*.cpp opengl-templates/src/*.cpp opengl-templates/src/glad.c"
 FLAGS="-Wall -Werror -Wextra -pedantic"
-LIBS="-lX11 -lglfw -lGL -lX11 -lpthread -lXrandr -lXi -ldl"
+LIBS="-lX11 -lglfw -lGL -lX11 -lpthread -lXrandr -lXi -ldl -lm"
 OUT="loupe"
 
 if [[ -z "$LIBS" ]]

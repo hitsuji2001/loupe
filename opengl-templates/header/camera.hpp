@@ -1,6 +1,8 @@
 #ifndef __CAMERA_HPP__
 #define __CAMERA_HPP__
 
+#include "../../src/custom_math.hpp"
+
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 

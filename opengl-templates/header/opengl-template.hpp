@@ -1,6 +1,8 @@
 #ifndef __OPENGL_TEMPLATE_HPP__
 #define __OPENGL_TEMPLATE_HPP__
 
+#include "../../src/custom_math.hpp"
+
 #include "./shader.hpp"
 #include "./window.hpp"
 #include "./texture.hpp"
@@ -51,7 +53,6 @@ protected:
 private:
   static void CursorCallback(GLFWwindow *window, double xPosIn, double yPosIn);
   static void ScrollCallback(GLFWwindow *window, double xoffset, double yoffset);
-  static float sigmoid(float x);
 
   void CleanUp();
 
