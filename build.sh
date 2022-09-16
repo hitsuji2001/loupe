@@ -1,7 +1,7 @@
 #!/bin/bash
 
 CXX="${CXX:-g++}"
-SRC_APP="src/*.cpp opengl-templates/src/*.cpp opengl-templates/src/glad.c"
+SRC_APP="src/*.cpp ./OGLT/src/*.cpp ./OGLT/src/BufferObject/*.cpp ./OGLT/src/Texture/*.cpp ./OGLT/src/Handler/*.cpp ./OGLT/src/Camera/*.cpp ./OGLT/glad/glad.c"
 FLAGS="-Wall -Werror -Wextra -pedantic"
 LIBS="-lX11 -lglfw -lGL -lX11 -lpthread -lXrandr -lXi -ldl -lm"
 OUT="loupe"

@@ -6,9 +6,9 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-#include "../opengl-templates/header/opengl-template.hpp"
+#include "../OGLT/header/OGLT.hpp"
 #define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "../opengl-templates/stb/stb_image_write.h"
+#include "../OGLT/stb/stb_image_write.h"
 
 void take_screenshot_and_save_to_file(const char *file_path = "screenshot.png") {
   Display *display = XOpenDisplay(NULL);
@@ -49,80 +49,72 @@ void take_screenshot_and_save_to_file(const char *file_path = "screenshot.png") 
   std::cout << "[INFO]: Done" << std::endl;
 }
 
-void process_input(GLFWwindow *window, Camera *camera, float deltaTime) {
-  (void) camera;
-  (void) deltaTime;
-  if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS or glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) glfwSetWindowShouldClose(window, true);
-}
-
 int main() {
-  float vertices[] = {
-     1.0f,  1.0f, 0.0f, 1.0f, 1.0f, // top right
-     1.0f, -1.0f, 0.0f, 1.0f, 0.0f, // bottom right
-    -1.0f, -1.0f, 0.0f, 0.0f, 0.0f, // bottom left
-    -1.0f,  1.0f, 0.0f, 0.0f, 1.0f, // top left 
-  };
+  oglt::OpenGL &opengl = oglt::OpenGL::CreateInstance();
+  oglt::OpenGL::CreateWindow("Loupe");
 
-  uint32_t indices[] = {
-    0, 1, 3,   // first triangle
-    1, 2, 3    // second triangle
-  };
+  const oglt::CameraType& type = oglt::CameraType::OrthoCamera;
 
-  float deltaTime = 0.0f;
-  float lastFrame = 0.0f;
+  oglt::OpenGL::CreateCamera(type);
+  oglt::OpenGL::CreateMouse();
 
-  OpenGL &opengl = OpenGL::CreateInstance();
-  opengl.GetWindow()->CreateWindow("Loupe", 0, 0, true);
+  oglt::OpenGL::CreateKeyHandler(type);
+  oglt::OpenGL::CreateMouseHandler(type);
 
-  opengl.SetCursorCallback();
-  opengl.SetScrollCallback();
+  oglt::OpenGL::CreateRenderer();
+  {
+    float width  = oglt::OpenGL::GetWindow()->GetWidth() * 1.0f;
+    float height = oglt::OpenGL::GetWindow()->GetHeight() * 1.0f;
 
-  opengl.GetShader()->LoadShaders("./shader/vertex.glsl", "./shader/fragment.glsl");
+    float vertices[] = {
+      // Position,          // Text Coord
+      width,   0.0f,  0.0f, 1.0f, 1.0f,  // top right
+      width, height,  0.0f, 1.0f, 0.0f,  // bottom right
+      0.0f,  height,  0.0f, 0.0f, 0.0f,  // bottom left
+      0.0f,    0.0f,  0.0f, 0.0f, 1.0f,  // top left 
+    };
 
-  opengl.SetVAO(new VAO());
-  opengl.GetVAO()->Bind();
+    uint32_t indices[] = {
+      0, 1, 3,   // first triangle
+      1, 2, 3    // second triangle
+    };
 
-  opengl.SetEBO(new EBO(indices, sizeof(indices)));
-  opengl.SetVBO(new VBO(vertices, sizeof(vertices)));
+    opengl.CreateVAO();
+    opengl.CreateVBO();
+    opengl.CreateEBO();
+
+    opengl.GetVAO().Bind();
+
+    opengl.GetEBO().FlushData(indices, sizeof(indices));
+    opengl.GetVBO().FlushData(vertices, sizeof(vertices));
   
-  opengl.GetVAO()->LinkVBO(opengl.GetVBO(), 0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-  opengl.GetVAO()->LinkVBO(opengl.GetVBO(), 1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    opengl.GetVAO().LinkVBO(opengl.GetVBO(), 0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    opengl.GetVAO().LinkVBO(opengl.GetVBO(), 1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
 
-  opengl.GetVAO()->Unbind();
+    opengl.GetVAO().Unbind();
+  }
 
-  opengl.GetTexture()->CreateTexture(GL_TEXTURE_2D);
-  opengl.GetTexture()->LoadTexture("screenshot.png", GL_RGBA);
+  opengl.CreateTexture(oglt::TextureType::TextureType2D);
+  opengl.GetTexture().LoadTexture("screenshot.png", GL_RGBA);
   while (!glfwWindowShouldClose(opengl.GetWindow()->GetOpenGLWindow())) {
-    float currentFrame = glfwGetTime();
-    deltaTime = currentFrame - lastFrame;
-    opengl.deltaTime = deltaTime;
-    lastFrame = currentFrame;
+    opengl.CalculateDeltaTime();
+    
+    oglt::OpenGL::GetKeyHandler().Handle(oglt::OpenGL::GetDeltaTime());
+    oglt::OpenGL::GetMouseHandler().Handle(oglt::OpenGL::GetDeltaTime());
 
-    process_input(opengl.GetWindow()->GetOpenGLWindow(), opengl.GetCamera(), deltaTime);
+    oglt::OpenGL::GetRenderer().ClearScreen(0x282828FF);
+    oglt::OpenGL::GetRenderer().ClearBitmask();
 
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    oglt::OpenGL::GetCamera()->SetAspectRatio((float)oglt::OpenGL::GetWindow()->GetWidth() / (float)oglt::OpenGL::GetWindow()->GetHeight());
+    oglt::OpenGL::GetCamera()->CalculatePositition();
+    oglt::OpenGL::GetCamera()->SubmitPosition();
 
-    glm::mat4 view       = glm::mat4(1.0f);
-    glm::mat4 projection = glm::mat4(1.0f);
-    glm::mat4 model      = glm::mat4(1.0f);
-
-    view = glm::lookAt(opengl.GetCamera()->GetPosition(), opengl.GetCamera()->GetPosition() + opengl.GetCamera()->GetFrontVector(), opengl.GetCamera()->GetUpVector());
-    projection = glm::perspective(glm::radians(opengl.GetCamera()->a_FOV), (float)opengl.GetWindow()->GetWidth() / (float)opengl.GetWindow()->GetHeight(), 0.1f, 100.0f);
-
-    opengl.GetShader()->SetMat4("projection", projection);
-    opengl.GetShader()->SetMat4("view", view);
-    opengl.GetShader()->SetMat4("model", model);
-
-    // opengl.GetTexture()->ActiveTexture(GL_TEXTURE0);
-
-    opengl.GetShader()->Use();
-    opengl.GetVAO()->Bind();
+    opengl.GetVAO().Bind();
 
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
-    glfwSwapBuffers(opengl.GetWindow()->GetOpenGLWindow());
-    glfwPollEvents();
+    oglt::OpenGL::GetRenderer().SwapBuffers();
+    oglt::OpenGL::PollEvents();
   }
 
   return 0;
