@@ -1,1 +1,15 @@
 loupe
+src/*.o
+src/*.d
+OGLT/glad/*.o
+OGLT/glad/*.d
+OGLT/src/*.o
+OGLT/src/*.d
+OGLT/src/BufferObject/*.o
+OGLT/src/BufferObject/*.d
+OGLT/src/Texture/*.o
+OGLT/src/Texture/*.d
+OGLT/src/Handler/*.o
+OGLT/src/Handler/*.d
+OGLT/src/Camera/*.o
+OGLT/src/Camera/*.d
